@@ -1,0 +1,60 @@
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.
+-->
+<project name="common"
+         xmlns:ivy="antlib:org.apache.ivy.ant">
+  <property environment="env" />
+
+  <property file="${common.dir}/build.properties"/>
+  <property name="build.encoding" value="ISO-8859-1"/>
+
+  <import file="db/db.xml" optional=""/>
+
+  <target name="schemaspy" description="Generates a visual representation of the project databases in a browser-displayable format using the SchemaSpy tool">
+    <fail unless="dbname">The property dbname must be specified! (e.g. ant schemaspy -Ddbname=rapleaf_test)</fail>
+    <property name="schemaspy.output.dir" value="${dbname}"/>
+    <condition property="dbhost" value="${dbhost}" else="localhost">
+      <isset property="dbhost" />
+    </condition>
+    <condition property="dbuser" value="${dbuser}" else="root">
+      <isset property="dbuser" />
+    </condition>
+    <condition property="dbpass_param" value="-p ${dbpassword}" else="">
+      <isset property="dbpassword" />
+    </condition>
+
+    <!--Resolve the schemaspy and mysql jars so that it's added to the system cache.
+    This is necessary because the jars may not be among the dependencies for the project.-->
+    <get src="http://artifactory.liveramp.net/artifactory/libs-release/schemaspy/schemaspy/5.0/schemaspy-5.0.jar" dest="." />
+    <get src="http://artifactory.liveramp.net/artifactory/libs-release/mysql/mysql-connector-java/5.1.30/mysql-connector-java-5.1.30.jar" dest="." />
+
+    <!--Delete output dir if exists-->
+    <exec dir="." executable="/bin/sh" failonerror="true">
+      <arg value="-c"/>
+      <arg value="rm -rf ${schemaspy.output.dir}"/>
+    </exec>
+
+    <!--Now that we have the jars, use them to generate the visual representation of the db schema-->
+    <java jar="schemaspy-5.0.jar" fork="true" failonerror="true">
+      <jvmarg line="-mx128m"/>
+      <arg line="-rails -t mysql -host ${dbhost} -dp mysql-connector-java-5.1.30.jar -db ${dbname} -u ${dbuser} ${dbpass_param} -o ${schemaspy.output.dir}"/>
+    </java>
+  </target>
+
+
+</project>

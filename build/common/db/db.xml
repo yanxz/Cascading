@@ -1,0 +1,15 @@
+<project name="db">
+  <available file="${basedir}/config" property="config.dir.exists"/>
+
+  <target name="load-config-snapshot" 
+    description="--> load a production config snapshot into the local db. Use -Djspruce=true and/or -Ds2s=true to require that the snapshot passed the corresponding integration tests">
+    <input message="enter db read-only user password:" addproperty="db.read.password">
+      <handler classname="org.apache.tools.ant.input.SecureInputHandler" />
+    </input>
+    <taskdef name="config_snapshot_dump" classname="com.rapleaf.spruce_lib.liveramp.config_cache.ConfigSnapshotDumpTask">
+      <classpath refid="test.classpath.id"/>
+    </taskdef>
+    <config_snapshot_dump/>
+  </target>
+
+</project>
